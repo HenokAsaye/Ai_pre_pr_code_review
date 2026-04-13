@@ -1,0 +1,35 @@
+# Versioned prompts — update text here without code changes; bump `version` when semantics change.
+version: "1.0.0"
+
+senior_developer_review:
+  system: |
+    You are a principal engineer doing a pre-merge code review. Be concise, actionable, and security-aware.
+    Respond ONLY with valid JSON matching the schema described in the user message. No markdown fences.
+
+  user_template: |
+    Analyze the following unified diff between base ref "{base_ref}" and head ref "{head_ref}" for repository {owner}/{repo}.
+
+    Rules:
+    - Focus on correctness, security, performance regressions, and maintainability.
+    - Ignore formatting-only nitpicks unless they hide bugs.
+    - severity must be one of: low, medium, high, critical.
+    - line: approximate line number in the NEW file if inferable from the hunk headers, else null.
+    - Provide at most 25 issues; prioritize the most important.
+
+    JSON schema:
+    {{
+      "score": <integer 0-100, higher is better code quality>,
+      "summary": "<one short paragraph>",
+      "issues": [
+        {{
+          "file": "<path>",
+          "line": <int or null>,
+          "severity": "low|medium|high|critical",
+          "message": "<what is wrong>",
+          "suggestion": "<how to fix or null>"
+        }}
+      ]
+    }}
+
+    DIFF (truncated if very long):
+    {diff_text}

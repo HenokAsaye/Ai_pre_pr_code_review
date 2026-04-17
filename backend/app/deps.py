@@ -2,9 +2,10 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.security import decrypt_secret, verify_jwt_token
+from app.core.security import decrypt_secret, encrypt_secret, verify_jwt_token
 from app.db.session import get_db
 from app.models.user import User
 
@@ -24,6 +25,7 @@ def get_token_payload(credentials: HTTPAuthorizationCredentials = Depends(securi
 def get_current_user(
     db: Session = Depends(get_db),
     payload: dict = Depends(get_token_payload),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> User:
     email = payload.get("email")
     if not email:
@@ -32,12 +34,43 @@ def get_current_user(
             detail="Access token must include an 'email' claim (configure NextAuth session).",
         )
     user = db.query(User).filter(User.email == email).first()
+    encrypted_jwt: str | None = None
+    try:
+        encrypted_jwt = encrypt_secret(credentials.credentials)
+    except RuntimeError:
+        # Keep auth functional even if token-at-rest encryption is not configured yet.
+        encrypted_jwt = None
+
     if user is None:
         sub = payload.get("sub")
-        user = User(email=email, github_username=str(sub) if sub else None)
+        user = User(
+            email=email,
+            github_username=str(sub) if sub else None,
+            encrypted_session_jwt=encrypted_jwt,
+        )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            db.commit()
+            db.refresh(user)
+        except IntegrityError:
+            # Concurrent first-login requests can race and hit unique(email); recover by loading existing row.
+            db.rollback()
+            existing = db.query(User).filter(User.email == email).first()
+            if existing is None:
+                raise
+            user = existing
+    elif encrypted_jwt and not user.encrypted_session_jwt:
+        user.encrypted_session_jwt = encrypted_jwt
+        db.add(user)
+        try:
+            db.commit()
+            db.refresh(user)
+        except IntegrityError:
+            db.rollback()
+            refreshed = db.query(User).filter(User.email == email).first()
+            if refreshed is None:
+                raise
+            user = refreshed
     return user
 
 

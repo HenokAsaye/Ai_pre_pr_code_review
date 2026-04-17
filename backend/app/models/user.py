@@ -20,6 +20,7 @@ class User(Base):
     )
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    encrypted_session_jwt: Mapped[str | None] = mapped_column(Text, nullable=True)
     encrypted_github_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

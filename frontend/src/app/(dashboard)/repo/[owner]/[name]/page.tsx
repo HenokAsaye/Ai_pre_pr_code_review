@@ -1,5 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { BranchSelector } from "@/components/features/repo/BranchSelector";
+import { AnalyzeButton } from "@/components/features/repo/AnalyzeButton";
 
 interface Props {
   params: Promise<{ owner: string; name: string }>;
@@ -21,7 +23,10 @@ export default async function RepoBranchPage({ params }: Props) {
           Select branches to compare and analyze.
         </p>
       </div>
-      {/* BranchSelector will be added in the next session */}
+      <div className="space-y-6">
+        <BranchSelector owner={owner} name={name} />
+        <AnalyzeButton owner={owner} name={name} />
+      </div>
     </main>
   );
 }

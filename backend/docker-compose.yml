@@ -63,6 +63,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    user: "65534:65534"
     command: >
       sh -c "celery -A app.core.celery_app:celery_app worker --loglevel=info"
 

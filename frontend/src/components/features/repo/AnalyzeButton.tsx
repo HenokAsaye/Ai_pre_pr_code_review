@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 import { useAnalysisStore } from "@/stores/analysis-store";
@@ -17,26 +16,23 @@ interface AnalyzeButtonProps {
 
 export function AnalyzeButton({ owner, name }: AnalyzeButtonProps) {
   const router = useRouter();
-  const { data: session } = useSession();
   const { baseBranch, headBranch, setTaskId } = useAnalysisStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const isDisabled = !baseBranch || !headBranch || baseBranch === headBranch;
 
   async function handleAnalyze() {
-    if (!session?.accessToken) return;
     setIsLoading(true);
     try {
       const payload: StartAnalysisPayload = {
-        repo_owner: owner,
-        repo_name: name,
-        base_branch: baseBranch,
-        head_branch: headBranch,
+        owner,
+        repo: name,
+        base_ref: baseBranch,
+        head_ref: headBranch,
       };
       const { data } = await apiClient.post<StartAnalysisResponse>(
         API_ROUTES.ANALYSIS_START,
         payload,
-        { headers: { Authorization: `Bearer ${session.accessToken}` } }
       );
       setTaskId(data.task_id);
       router.push(`/analysis/${data.task_id}`);

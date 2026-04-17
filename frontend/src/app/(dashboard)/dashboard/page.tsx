@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { RepoList } from "@/components/features/dashboard/RepoList";
 
 export const metadata = {
   title: "Dashboard — ReviewAI",
@@ -17,8 +18,7 @@ export default async function DashboardPage() {
           Select a repository to begin your pre-PR review.
         </p>
       </div>
-      {/* RepoList will be added in the next session */}
-      <p className="text-muted-foreground text-sm">Loading repositories…</p>
+      <RepoList />
     </main>
   );
 }

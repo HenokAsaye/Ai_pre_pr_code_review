@@ -18,8 +18,9 @@ export function FeedbackList({ issues }: FeedbackListProps) {
 
   const counts = {
     critical: issues.filter((i) => i.severity === "critical").length,
-    warning: issues.filter((i) => i.severity === "warning").length,
-    best_practice: issues.filter((i) => i.severity === "best_practice").length,
+    high: issues.filter((i) => i.severity === "high").length,
+    medium: issues.filter((i) => i.severity === "medium").length,
+    low: issues.filter((i) => i.severity === "low").length,
   };
 
   const filtered =
@@ -62,7 +63,9 @@ export function FeedbackList({ issues }: FeedbackListProps) {
             issues found.
           </p>
         ) : (
-          filtered.map((issue) => <IssueCard key={issue.id} issue={issue} />)
+          filtered.map((issue) => (
+            <IssueCard key={`${issue.file}:${issue.line ?? 0}:${issue.message}`} issue={issue} />
+          ))
         )}
       </div>
     </div>

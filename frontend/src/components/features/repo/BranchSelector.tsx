@@ -3,7 +3,6 @@
 import { useBranches } from "@/hooks/use-branches";
 import { useAnalysisStore } from "@/stores/analysis-store";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { GitBranch } from "lucide-react";
 
 interface BranchSelectorProps {
   owner: string;
@@ -34,7 +33,6 @@ export function BranchSelector({ owner, name }: BranchSelectorProps) {
             <option value="">Select base branch…</option>
             {branches?.map((b) => (
               <option key={b.name} value={b.name}>
-                <GitBranch className="h-3 w-3" />
                 {b.name}
               </option>
             ))}

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { AnalysisResultsDashboard } from "@/components/features/analysis/AnalysisResultsDashboard";
 
 interface Props {
   params: Promise<{ taskId: string }>;
@@ -19,7 +20,7 @@ export default async function AnalysisPage({ params }: Props) {
           Task: {taskId}
         </p>
       </div>
-      {/* AnalysisResultsDashboard will be added in the next session */}
+      <AnalysisResultsDashboard taskId={taskId} />
     </main>
   );
 }

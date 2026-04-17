@@ -2,32 +2,15 @@ export interface GitHubRepo {
   id: number;
   name: string;
   full_name: string;
-  owner: GitHubOwner;
   private: boolean;
   description: string | null;
   html_url: string;
-  language: string | null;
-  stargazers_count: number;
-  forks_count: number;
-  updated_at: string;
-  default_branch: string;
-  visibility: "public" | "private" | "internal";
-}
-
-export interface GitHubOwner {
-  login: string;
-  avatar_url: string;
-  html_url: string;
-  type: "User" | "Organization";
+  default_branch: string | null;
 }
 
 export interface GitHubBranch {
   name: string;
-  commit: {
-    sha: string;
-    url: string;
-  };
-  protected: boolean;
+  sha: string;
 }
 
 export interface GitHubDiffFile {

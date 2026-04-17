@@ -1,52 +1,30 @@
-export type IssueSeverity = "critical" | "warning" | "best_practice";
+export type IssueSeverity = "low" | "medium" | "high" | "critical";
 export type TaskStatus = "pending" | "processing" | "completed" | "failed";
-export type IssueCategory = "security" | "performance" | "logic" | "style" | "maintainability";
 
 export interface AnalysisIssue {
-  id: string;
   file: string;
-  line_start: number;
-  line_end: number;
+  line: number | null;
   severity: IssueSeverity;
-  category: IssueCategory;
-  title: string;
-  description: string;
-  suggestion: string;
-  code_snippet?: string;
-  fixed_snippet?: string;
-}
-
-export interface AnalysisResult {
-  task_id: string;
-  repo_full_name: string;
-  base_branch: string;
-  head_branch: string;
-  confidence_score: number;
-  summary: string;
-  issues: AnalysisIssue[];
-  files_analyzed: number;
-  total_changes: number;
-  created_at: string;
-  completed_at: string;
+  message: string;
+  suggestion: string | null;
 }
 
 export interface AnalysisTask {
-  task_id: string;
+  score: number | null;
   status: TaskStatus;
-  progress?: number;
-  result?: AnalysisResult;
-  error?: string;
+  summary: string | null;
+  issues: AnalysisIssue[];
+  error_message?: string | null;
 }
 
 export interface StartAnalysisPayload {
-  repo_owner: string;
-  repo_name: string;
-  base_branch: string;
-  head_branch: string;
+  owner: string;
+  repo: string;
+  base_ref: string;
+  head_ref: string;
 }
 
 export interface StartAnalysisResponse {
   task_id: string;
   status: TaskStatus;
-  message: string;
 }

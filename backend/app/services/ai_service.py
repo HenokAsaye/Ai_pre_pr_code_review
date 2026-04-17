@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field, ValidationError
 
 from app.core.config import settings
@@ -16,6 +16,23 @@ class _LLMReviewPayload(BaseModel):
     score: int = Field(ge=0, le=100)
     summary: str
     issues: list[dict[str, Any]] = Field(default_factory=list)
+
+
+def _text_from_message(msg: BaseMessage) -> str:
+    """Normalize LangChain message content to a string (Gemini may return structured parts)."""
+    raw = msg.content
+    if isinstance(raw, str):
+        return raw.strip()
+    if isinstance(raw, list):
+        parts: list[str] = []
+        for block in raw:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict):
+                if block.get("type") == "text" and isinstance(block.get("text"), str):
+                    parts.append(block["text"])
+        return "".join(parts).strip()
+    return str(raw).strip()
 
 
 def _adjust_score_for_severity(base_score: int, issues: list[ReviewIssue]) -> int:
@@ -54,9 +71,9 @@ def run_senior_review_sync(
     head_ref: str,
     diff_text: str,
 ) -> tuple[int, str, list[ReviewIssue]]:
-    """Runs the configured chat model (OpenAI via LangChain) and returns structured review data."""
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY is not set")
+    """Runs Google Gemini via LangChain and returns structured review data."""
+    if not settings.google_api_key.strip():
+        raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY is not set")
 
     if not diff_text.strip():
         return (
@@ -73,18 +90,22 @@ def run_senior_review_sync(
         diff_text=diff_text,
     )
 
-    llm = ChatOpenAI(
-        model=settings.openai_model,
+    llm = ChatGoogleGenerativeAI(
+        model=settings.gemini_model,
+        api_key=settings.google_api_key,
         temperature=0.2,
-        api_key=settings.openai_api_key,
-        model_kwargs={"response_format": {"type": "json_object"}},
+        response_mime_type="application/json",
+        convert_system_message_to_human=True,
     )
     msg = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
-    content = msg.content
-    if not isinstance(content, str):
-        raise ValueError("Unexpected LLM response shape")
+    if not isinstance(msg, AIMessage):
+        raise ValueError("Unexpected LLM response type")
 
-    data = json.loads(content)
+    text = _text_from_message(msg)
+    if not text:
+        raise ValueError("Empty LLM response")
+
+    data = json.loads(text)
     payload = _LLMReviewPayload.model_validate(data)
     issues = _parse_issues(payload.issues)
     score = _adjust_score_for_severity(payload.score, issues)

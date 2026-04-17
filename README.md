@@ -4,7 +4,7 @@ Helps developers run an automated review **before** opening a pull request: choo
 
 ## Repository layout
 
-- **`backend/`** — FastAPI API, Celery workers, PostgreSQL models, GitHub + OpenAI integration (`backend/README.md`).
+- **`backend/`** — FastAPI API, Celery workers, PostgreSQL models, GitHub + Gemini integration (`backend/README.md`).
 
 ## Backend at a glance
 

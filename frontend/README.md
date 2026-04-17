@@ -2,6 +2,23 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Create env file first:
+
+```bash
+cp .env.example .env.local
+```
+
+Set `AUTH_SECRET` (or `NEXTAUTH_SECRET`), `GITHUB_ID`, and `GITHUB_SECRET`.
+For backend JWT validation, make sure `AUTH_SECRET` matches backend `JWT_SECRET`.
+
+**Port:** `NEXTAUTH_URL` must match the origin you use (including port). If something else is already bound to `3000`, Next may pick `3001`/`3002` automatically — then either free port `3000` or set `NEXTAUTH_URL` to that port and update your GitHub OAuth callback URL to match (e.g. `http://localhost:3001/api/auth/callback/github`).
+
+To force port **3001** after the port is free:
+
+```bash
+npm run dev:3001
+```
+
 First, run the development server:
 
 ```bash

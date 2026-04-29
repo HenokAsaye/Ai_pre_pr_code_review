@@ -19,7 +19,7 @@ export function RepoList() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-20">
         <LoadingSpinner size="lg" label="Fetching your repositories..." />
       </div>
     );
@@ -27,11 +27,18 @@ export function RepoList() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-sm text-muted-foreground">
-          Failed to load repositories. Please try again.
-        </p>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="rounded-full bg-destructive/10 p-3">
+          <AlertCircle className="h-6 w-6 text-destructive" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-foreground mb-1">
+            Unable to load repositories
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please check your connection and try again.
+          </p>
+        </div>
       </div>
     );
   }
@@ -39,19 +46,19 @@ export function RepoList() {
   return (
     <div className="space-y-6">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search repositories..."
+          placeholder="Search repositories by name or description..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9"
+          className="pl-11 h-11 text-base border-white/10 bg-white/5 focus:bg-white/8"
         />
       </div>
 
       {filtered?.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            No repositories found matching &ldquo;{query}&rdquo;
+        <div className="py-20 text-center">
+          <p className="text-base text-muted-foreground">
+            {query ? `No repositories found matching "${query}"` : "No repositories available"}
           </p>
         </div>
       ) : (

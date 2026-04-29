@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Sparkles, Zap } from "lucide-react";
 import { useAnalysisStore } from "@/stores/analysis-store";
 import apiClient from "@/lib/api-client";
 import { API_ROUTES } from "@/constants";
@@ -16,7 +17,7 @@ interface AnalyzeButtonProps {
 
 export function AnalyzeButton({ owner, name }: AnalyzeButtonProps) {
   const router = useRouter();
-  const { baseBranch, headBranch, setTaskId } = useAnalysisStore();
+  const { baseBranch, headBranch, setTaskId, setSelectedRepo } = useAnalysisStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const isDisabled = !baseBranch || !headBranch || baseBranch === headBranch;
@@ -35,6 +36,7 @@ export function AnalyzeButton({ owner, name }: AnalyzeButtonProps) {
         payload,
       );
       setTaskId(data.task_id);
+      setSelectedRepo({ owner, name, fullName: `${owner}/${name}` });
       router.push(`/analysis/${data.task_id}`);
     } catch (error) {
       console.error("Analysis failed to start:", error);
@@ -43,18 +45,38 @@ export function AnalyzeButton({ owner, name }: AnalyzeButtonProps) {
   }
 
   return (
-    <Button
-      size="lg"
-      className="gap-2"
-      onClick={handleAnalyze}
-      disabled={isDisabled || isLoading}
-    >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Sparkles className="h-4 w-4" />
-      )}
-      {isLoading ? "Starting analysis..." : "Analyze Changes"}
-    </Button>
+    <Card className={`border-white/8 bg-white/5 backdrop-blur-sm ${ isDisabled ? "opacity-60" : "" }`}>
+      <CardContent className="p-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10 border border-primary/20">
+              <Zap className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Ready to analyze?</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Get instant feedback from our AI</p>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="gap-2 px-8"
+            onClick={handleAnalyze}
+            disabled={isDisabled || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Analyze Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

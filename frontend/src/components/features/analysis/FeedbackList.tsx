@@ -4,6 +4,7 @@ import { useState } from "react";
 import { IssueCard } from "./IssueCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 import { SEVERITY_CONFIG } from "@/constants";
 import type { AnalysisIssue, IssueSeverity } from "@/types/analysis";
 
@@ -27,41 +28,57 @@ export function FeedbackList({ issues }: FeedbackListProps) {
     filter === "all" ? issues : issues.filter((i) => i.severity === filter);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Filter buttons */}
       <div className="flex flex-wrap gap-2">
         <Button
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
           onClick={() => setFilter("all")}
-          className="h-8 gap-1.5"
+          className="h-9 gap-2 font-medium transition-all"
         >
           All
-          <Badge variant="secondary" className="text-xs h-4 px-1">
-            {issues.length}
-          </Badge>
-        </Button>
-        {(Object.keys(SEVERITY_CONFIG) as IssueSeverity[]).map((sev) => (
-          <Button
-            key={sev}
-            variant={filter === sev ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(sev)}
-            className="h-8 gap-1.5"
-          >
-            {SEVERITY_CONFIG[sev].label}
-            <Badge variant="secondary" className="text-xs h-4 px-1">
-              {counts[sev]}
+          {issues.length > 0 && (
+            <Badge variant="secondary" className="text-xs h-5 px-1.5 ml-1">
+              {issues.length}
             </Badge>
-          </Button>
-        ))}
+          )}
+        </Button>
+        {(Object.keys(SEVERITY_CONFIG) as IssueSeverity[]).map((sev) => {
+          const count = counts[sev];
+          return (
+            <Button
+              key={sev}
+              variant={filter === sev ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(sev)}
+              className="h-9 gap-2 font-medium transition-all"
+            >
+              {SEVERITY_CONFIG[sev].label}
+              {count > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-1.5 ml-1">
+                  {count}
+                </Badge>
+              )}
+            </Button>
+          );
+        })}
       </div>
 
+      {/* Issues list */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No {filter === "all" ? "" : SEVERITY_CONFIG[filter as IssueSeverity].label.toLowerCase()}{" "}
-            issues found.
-          </p>
+          <div className="py-12 text-center rounded-lg border border-white/8 bg-white/5">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
+            <p className="text-sm font-medium text-foreground">
+              {filter === "all"
+                ? "No issues found"
+                : `No ${SEVERITY_CONFIG[filter as IssueSeverity].label.toLowerCase()} issues`}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Great job!
+            </p>
+          </div>
         ) : (
           filtered.map((issue) => (
             <IssueCard key={`${issue.file}:${issue.line ?? 0}:${issue.message}`} issue={issue} />

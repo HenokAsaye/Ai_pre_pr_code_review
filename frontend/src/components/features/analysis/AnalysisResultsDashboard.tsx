@@ -1,13 +1,12 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Clock, AlertTriangle, RefreshCw } from "lucide-react";
 import { ConfidenceScore } from "@/components/features/analysis/ConfidenceScore";
 import { FeedbackList } from "@/components/features/analysis/FeedbackList";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAnalysisPolling } from "@/hooks/use-analysis-polling";
 import { getFriendlyErrorMessage, getErrorTitle } from "@/lib/error-messages";
+import { verdictForScore } from "@/lib/utils";
+import { useAnalysisStore } from "@/stores/analysis-store";
 import { useRouter } from "next/navigation";
 
 interface AnalysisResultsDashboardProps {
@@ -15,195 +14,146 @@ interface AnalysisResultsDashboardProps {
 }
 
 export function AnalysisResultsDashboard({ taskId }: AnalysisResultsDashboardProps) {
-  const { data, isLoading, isError, error, refetch } = useAnalysisPolling(taskId);
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalysisPolling(taskId);
   const router = useRouter();
+  const selectedRepo = useAnalysisStore((state) => state.selectedRepo);
+  const baseBranch = useAnalysisStore((state) => state.baseBranch);
+  const headBranch = useAnalysisStore((state) => state.headBranch);
 
-  if (isLoading) {
+  const meta =
+    selectedRepo && baseBranch && headBranch
+      ? `${selectedRepo.fullName} · ${baseBranch}…${headBranch}`
+      : selectedRepo?.fullName;
+
+  if (isLoading || data?.status === "pending" || data?.status === "processing") {
+    const queued = data?.status === "pending";
+    const waiting = isLoading && !data;
     return (
-      <Card className="border-white/8 bg-white/5 backdrop-blur-sm">
-        <CardContent className="py-16">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 rounded-full border-4 border-white/10" />
-              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-semibold text-foreground">Analyzing your code...</p>
-              <p className="text-sm text-muted-foreground mt-2">This usually takes 10-30 seconds</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewStatus
+        meta={meta}
+        kicker={waiting ? "Loading" : queued ? "Queued" : "In progress"}
+        title={waiting ? "Opening the review" : queued ? "Waiting to start" : "Reading the diff"}
+        detail={
+          waiting
+            ? "Fetching the latest status."
+            : queued
+              ? "The review is queued. This page updates on its own."
+              : "This usually takes 10–30 seconds. Keep this page open."
+        }
+      />
     );
   }
 
-  if (isError) {
-    const friendlyMessage = getFriendlyErrorMessage((error as Error | undefined)?.message);
-    const title = getErrorTitle((error as Error | undefined)?.message);
+  if (isError || !data) {
+    const message = isError
+      ? getFriendlyErrorMessage((error as Error | undefined)?.message)
+      : "No review is available for this link yet.";
+    const title = isError
+      ? getErrorTitle((error as Error | undefined)?.message)
+      : "Nothing here yet";
 
     return (
-      <Card className="border-destructive/30 bg-destructive/5 backdrop-blur-sm">
-        <CardContent className="py-12">
-          <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-destructive mb-1">{title}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">{friendlyMessage}</p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              className="mt-4 gap-2 border-destructive/20"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Try again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewStatus
+        meta={meta}
+        kicker="Could not load"
+        title={title}
+        detail={message}
+        alert
+        action={
+          <Button
+            variant="outline"
+            className="h-11 px-4"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? "Trying again…" : "Try again"}
+          </Button>
+        }
+      />
     );
   }
 
-  if (!data) {
-    return (
-      <Card className="border-white/8 bg-white/5">
-        <CardContent className="py-12">
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
-            <Clock className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No analysis data available yet</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Pending or processing state
-  if (data.status === "pending" || data.status === "processing") {
-    return (
-      <Card className="border-white/8 bg-white/5 backdrop-blur-sm">
-        <CardContent className="py-16">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 rounded-full border-4 border-white/10" />
-              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-semibold text-foreground">
-                {data.status === "pending"
-                  ? "Your analysis is queued"
-                  : "Analyzing your code..."}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {data.status === "pending"
-                  ? "Getting ready to analyze your changes"
-                  : "Our AI is reviewing your diff"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Failed state with user-friendly message
   if (data.status === "failed") {
-    const friendlyMessage = getFriendlyErrorMessage(data.error_message);
-    const title = getErrorTitle(data.error_message);
-
     return (
-      <Card className="border-destructive/30 bg-destructive/5 backdrop-blur-sm">
-        <CardContent className="py-12">
-          <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-destructive mb-1">{title}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">{friendlyMessage}</p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="mt-4 gap-2 border-destructive/20"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Try with different branches
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <ReviewStatus
+        meta={meta}
+        kicker="Review failed"
+        title={getErrorTitle(data.error_message)}
+        detail={getFriendlyErrorMessage(data.error_message)}
+        alert
+        action={
+          <Button variant="outline" className="h-11 px-4" onClick={() => router.back()}>
+            Choose different branches
+          </Button>
+        }
+      />
     );
   }
 
-  // Completed state - show full results
+  const score = data.score ?? 0;
+  const verdict = verdictForScore(score);
+  const issues = data.issues ?? [];
+  const summary = data.summary?.trim();
+
   return (
-    <div className="space-y-6">
-      {/* Success header */}
-      <Card className="border-green-500/30 bg-green-500/5 backdrop-blur-sm">
-        <CardContent className="py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-500/10">
-              <CheckCircle2 className="h-6 w-6 text-green-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-green-600">Analysis complete</p>
-              <p className="text-sm text-muted-foreground">Review the findings below</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div>
+      {meta ? <p className="truncate font-mono text-xs text-muted-foreground">{meta}</p> : null}
+      <div className="mt-8 lg:grid lg:grid-cols-[8.5rem_minmax(0,1fr)] lg:items-start lg:gap-x-12">
+        <div className="border-b border-border pb-6 lg:sticky lg:top-20 lg:border-0 lg:pb-0">
+          <ConfidenceScore score={score} />
+        </div>
+        <div className="pt-8 lg:pt-1">
+          <h1
+            className={
+              summary
+                ? "max-w-2xl font-heading text-3xl leading-snug tracking-tight break-words text-pretty text-foreground italic sm:text-4xl"
+                : "max-w-2xl font-heading text-3xl leading-snug tracking-tight break-words text-pretty text-foreground sm:text-4xl"
+            }
+          >
+            {summary || verdict.note}
+          </h1>
+          {summary ? (
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              {verdict.note}
+            </p>
+          ) : null}
+          {issues.length === 0 ? (
+            <p className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
+              No issues were marked on this diff.
+            </p>
+          ) : (
+            <FeedbackList issues={issues} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      {/* Confidence Score Card */}
-      <Card className="border-white/8 bg-white/5 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <div className="h-1 w-1 rounded-full bg-primary" />
-            Code Quality Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <ConfidenceScore score={data.score ?? 0} />
-            {data.summary && (
-              <div className="rounded-lg border border-white/8 bg-white/5 p-4">
-                <p className="text-sm leading-relaxed text-foreground">{data.summary}</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Issues Card */}
-      {(data.issues ?? []).length > 0 && (
-        <Card className="border-white/8 bg-white/5 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Issues Found
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FeedbackList issues={data.issues ?? []} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Empty state for no issues */}
-      {(!data.issues || data.issues.length === 0) && (
-        <Card className="border-green-500/30 bg-green-500/5 backdrop-blur-sm">
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center gap-3 text-center">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="font-semibold text-green-600">No issues found!</p>
-                <p className="text-sm text-muted-foreground mt-1">Your code looks great</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+function ReviewStatus({
+  meta,
+  kicker,
+  title,
+  detail,
+  action,
+  alert = false,
+}: {
+  meta?: string;
+  kicker: string;
+  title: string;
+  detail: string;
+  action?: React.ReactNode;
+  alert?: boolean;
+}) {
+  return (
+    <div className="max-w-xl" role={alert ? "alert" : "status"} aria-live="polite">
+      {meta ? <p className="truncate font-mono text-xs text-muted-foreground">{meta}</p> : null}
+      <p className={`kicker ${meta ? "mt-6" : ""} ${alert ? "text-destructive!" : ""}`}>{kicker}</p>
+      <h1 className="mt-3 font-heading text-4xl tracking-tight text-pretty text-foreground sm:text-5xl">
+        {title}
+      </h1>
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{detail}</p>
+      {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 }

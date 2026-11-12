@@ -6,9 +6,7 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   const protectedRoutes = ["/dashboard", "/repo", "/analysis"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtectedRoute && !isLoggedIn) {
     const loginUrl = new URL("/login", req.nextUrl.origin);

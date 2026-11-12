@@ -4,9 +4,7 @@ import { API_ROUTES, QUERY_KEYS, ANALYSIS_POLL_INTERVAL_MS } from "@/constants";
 import type { AnalysisTask } from "@/types/analysis";
 
 async function fetchAnalysisStatus(taskId: string): Promise<AnalysisTask> {
-  const response = await apiClient.get<AnalysisTask>(
-    API_ROUTES.ANALYSIS_STATUS(taskId),
-  );
+  const response = await apiClient.get<AnalysisTask>(API_ROUTES.ANALYSIS_STATUS(taskId));
   return response.data;
 }
 

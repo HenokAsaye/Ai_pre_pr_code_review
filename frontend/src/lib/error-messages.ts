@@ -11,12 +11,8 @@ export function getFriendlyErrorMessage(backendError: string | null | undefined)
   const error = backendError.toLowerCase();
 
   // GitHub token / auth issues
-  if (
-    error.includes("github token") ||
-    error.includes("not linked") ||
-    error.includes("decrypt")
-  ) {
-    return "We lost access to your GitHub account. Please reconnect your GitHub account in settings.";
+  if (error.includes("github token") || error.includes("not linked") || error.includes("decrypt")) {
+    return "We lost access to your GitHub account. Sign out and sign in again to reconnect.";
   }
 
   // GitHub API rate limiting / errors
@@ -39,11 +35,7 @@ export function getFriendlyErrorMessage(backendError: string | null | undefined)
   }
 
   // Timeout / service unavailable
-  if (
-    error.includes("503") ||
-    error.includes("timeout") ||
-    error.includes("unavailable")
-  ) {
+  if (error.includes("503") || error.includes("timeout") || error.includes("unavailable")) {
     return "Our service is temporarily unavailable. Please try again in a few moments.";
   }
 
@@ -71,18 +63,11 @@ export function getErrorTitle(backendError: string | null | undefined): string {
 
   const error = backendError.toLowerCase();
 
-  if (
-    error.includes("github token") ||
-    error.includes("not linked") ||
-    error.includes("decrypt")
-  ) {
+  if (error.includes("github token") || error.includes("not linked") || error.includes("decrypt")) {
     return "GitHub Access Lost";
   }
 
-  if (
-    error.includes("429") ||
-    error.includes("rate limit")
-  ) {
+  if (error.includes("429") || error.includes("rate limit")) {
     return "GitHub API Busy";
   }
 
@@ -95,10 +80,7 @@ export function getErrorTitle(backendError: string | null | undefined): string {
     return "Branches Not Found";
   }
 
-  if (
-    error.includes("503") ||
-    error.includes("unavailable")
-  ) {
+  if (error.includes("503") || error.includes("unavailable")) {
     return "Service Unavailable";
   }
 

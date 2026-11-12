@@ -28,6 +28,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     GitHub({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
+      // GitHub adds iss=https://github.com/login/oauth on the way back.
+      // This Auth.js version otherwise expects https://authjs.dev and
+      // rejects the callback before a session exists.
+      issuer: "https://github.com/login/oauth",
       authorization: {
         params: {
           scope: "read:user user:email repo",

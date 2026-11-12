@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { IssueCard } from "./IssueCard";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
 import { SEVERITY_CONFIG } from "@/constants";
+import { cn } from "@/lib/utils";
 import type { AnalysisIssue, IssueSeverity } from "@/types/analysis";
 
 interface FeedbackListProps {
@@ -18,73 +16,83 @@ export function FeedbackList({ issues }: FeedbackListProps) {
   const [filter, setFilter] = useState<FilterState>("all");
 
   const counts = {
-    critical: issues.filter((i) => i.severity === "critical").length,
-    high: issues.filter((i) => i.severity === "high").length,
-    medium: issues.filter((i) => i.severity === "medium").length,
-    low: issues.filter((i) => i.severity === "low").length,
+    critical: issues.filter((issue) => issue.severity === "critical").length,
+    high: issues.filter((issue) => issue.severity === "high").length,
+    medium: issues.filter((issue) => issue.severity === "medium").length,
+    low: issues.filter((issue) => issue.severity === "low").length,
   };
 
-  const filtered =
-    filter === "all" ? issues : issues.filter((i) => i.severity === filter);
+  const filtered = filter === "all" ? issues : issues.filter((issue) => issue.severity === filter);
+  const present = (Object.keys(SEVERITY_CONFIG) as IssueSeverity[]).filter(
+    (severity) => counts[severity] > 0,
+  );
 
   return (
-    <div className="space-y-5">
-      {/* Filter buttons */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={filter === "all" ? "default" : "outline"}
-          size="sm"
+    <div className="mt-10">
+      <div
+        className="flex flex-wrap items-end gap-x-5 gap-y-1 border-b border-border"
+        role="group"
+        aria-label="Filter issues"
+      >
+        <FilterButton
+          active={filter === "all"}
           onClick={() => setFilter("all")}
-          className="h-9 gap-2 font-medium transition-all"
+          count={issues.length}
         >
           All
-          {issues.length > 0 && (
-            <Badge variant="secondary" className="text-xs h-5 px-1.5 ml-1">
-              {issues.length}
-            </Badge>
-          )}
-        </Button>
-        {(Object.keys(SEVERITY_CONFIG) as IssueSeverity[]).map((sev) => {
-          const count = counts[sev];
-          return (
-            <Button
-              key={sev}
-              variant={filter === sev ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(sev)}
-              className="h-9 gap-2 font-medium transition-all"
-            >
-              {SEVERITY_CONFIG[sev].label}
-              {count > 0 && (
-                <Badge variant="secondary" className="text-xs h-5 px-1.5 ml-1">
-                  {count}
-                </Badge>
-              )}
-            </Button>
-          );
-        })}
+        </FilterButton>
+        {present.map((severity) => (
+          <FilterButton
+            key={severity}
+            active={filter === severity}
+            onClick={() => setFilter(severity)}
+            count={counts[severity]}
+          >
+            {SEVERITY_CONFIG[severity].label}
+          </FilterButton>
+        ))}
       </div>
 
-      {/* Issues list */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="py-12 text-center rounded-lg border border-white/8 bg-white/5">
-            <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground">
-              {filter === "all"
-                ? "No issues found"
-                : `No ${SEVERITY_CONFIG[filter as IssueSeverity].label.toLowerCase()} issues`}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Great job!
-            </p>
-          </div>
-        ) : (
-          filtered.map((issue) => (
-            <IssueCard key={`${issue.file}:${issue.line ?? 0}:${issue.message}`} issue={issue} />
-          ))
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <p className="py-8 text-sm text-muted-foreground">
+          {filter === "all"
+            ? "No issues were marked on this diff."
+            : `No ${SEVERITY_CONFIG[filter].label.toLowerCase()} issues.`}
+        </p>
+      ) : (
+        filtered.map((issue) => (
+          <IssueCard key={`${issue.file}:${issue.line ?? 0}:${issue.message}`} issue={issue} />
+        ))
+      )}
     </div>
+  );
+}
+
+function FilterButton({
+  active,
+  onClick,
+  count,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "-mb-px inline-flex h-11 items-center gap-2 border-b-2 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        active
+          ? "border-foreground text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+      <span className="font-mono text-xs tabular-nums">{count}</span>
+    </button>
   );
 }

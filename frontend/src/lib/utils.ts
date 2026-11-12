@@ -23,9 +23,21 @@ export function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + "...";
 }
 
-export function getConfidenceColor(score: number): string {
-  if (score >= 80) return "text-green-500";
-  if (score >= 60) return "text-yellow-500";
-  return "text-red-500";
+export function verdictForScore(score: number): { label: string; note: string } {
+  if (score >= 80) {
+    return {
+      label: "Clear to open",
+      note: "Nothing here should block the pull request.",
+    };
+  }
+  if (score >= 60) {
+    return {
+      label: "Needs a pass",
+      note: "Read the marked issues before you open it.",
+    };
+  }
+  return {
+    label: "Hold",
+    note: "The marked issues should be fixed before this opens.",
+  };
 }
-

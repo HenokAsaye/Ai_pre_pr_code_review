@@ -19,8 +19,7 @@ def verify_jwt_token(token: str) -> dict:
 def get_fernet() -> Fernet:
     if not settings.fernet_key:
         raise RuntimeError(
-            "FERNET_KEY is not set. Generate one and add it to the environment "
-            "(see .env.example).",
+            "FERNET_KEY is not set. Generate one and add it to the environment (see .env.example).",
         )
     return Fernet(settings.fernet_key.encode("utf-8"))
 

@@ -4,7 +4,9 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class GitHubTokenIn(BaseModel):
-    access_token: str = Field(..., min_length=1, description="GitHub OAuth access token from the client")
+    access_token: str = Field(
+        ..., min_length=1, description="GitHub OAuth access token from the client"
+    )
 
 
 class UserOut(BaseModel):

@@ -1,42 +1,41 @@
-import { Suspense } from "react";
 import { LoginCard } from "@/components/features/landing/LoginCard";
-import { GitMerge } from "lucide-react";
-import Link from "next/link";
+import { Wordmark } from "@/components/shared/wordmark";
 
 export const metadata = {
-  title: "Sign In — ReviewAI",
-  description: "Sign in with GitHub to start reviewing your code.",
+  title: "Sign in — ReviewAI",
+  description: "Sign in with GitHub to review a branch before you open a pull request.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
+}) {
+  const params = await searchParams;
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 overflow-hidden">
-      {/* Background glow */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-background" />
-        <div className="absolute left-1/2 top-1/3 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-primary/10 blur-[120px] animate-glow" />
-      </div>
-
-      {/* Subtle grid */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,oklch(1_0_0/3%)_1px,transparent_1px),linear-gradient(to_bottom,oklch(1_0_0/3%)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_20%,transparent_100%)]"
-      />
-
-      {/* Logo */}
-      <Link
-        href="/"
-        className="mb-10 flex items-center gap-2.5 group"
-      >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-shadow group-hover:shadow-primary/50">
-          <GitMerge className="h-5 w-5" />
+    <div className="flex min-h-full flex-1 flex-col">
+      <header className="border-b border-border">
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
+          <Wordmark />
         </div>
-        <span className="text-lg font-semibold text-foreground">ReviewAI</span>
-      </Link>
-
-      <Suspense>
-        <LoginCard />
-      </Suspense>
+      </header>
+      <main
+        id="main"
+        className="mx-auto grid w-full max-w-6xl flex-1 items-start gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:py-20"
+      >
+        <div className="max-w-md">
+          <p className="kicker">Sign in</p>
+          <h1 className="mt-3 font-heading text-4xl tracking-tight text-pretty text-foreground sm:text-5xl">
+            Sign in to review a branch.
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+            GitHub is the only sign-in. Repo access is what lets the review read the diff. You can
+            sign out from any page after that.
+          </p>
+        </div>
+        <LoginCard callbackUrl={params.callbackUrl} error={params.error} />
+      </main>
     </div>
   );
 }

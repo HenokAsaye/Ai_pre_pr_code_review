@@ -9,7 +9,7 @@ export default function LandingPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />

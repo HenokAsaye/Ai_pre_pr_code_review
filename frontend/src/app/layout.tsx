@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { Providers } from "@/components/shared/providers";
 import "./globals.css";
 
@@ -13,14 +13,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "AI Pre-PR Code Review",
+  title: "ReviewAI — Pre-PR code review",
   description:
-    "Senior developer-level AI feedback on your code before it hits the team. Catch bugs, security issues, and performance bottlenecks in seconds.",
-  keywords: ["code review", "AI", "GitHub", "pull request", "developer tools"],
+    "A written review of a GitHub branch diff before you open the pull request. Score, summary, and the issues worth fixing.",
+  keywords: ["code review", "GitHub", "pull request", "diff", "developer tools"],
   openGraph: {
-    title: "AI Pre-PR Code Review",
-    description: "Shift-left: catch bugs before they reach the team.",
+    title: "ReviewAI — Pre-PR code review",
+    description: "Read the diff before the team does.",
     type: "website",
   },
 };
@@ -33,10 +40,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:outline-2 focus:outline-offset-2 focus:outline-ring"
+        >
+          Skip to content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

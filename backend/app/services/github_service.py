@@ -109,7 +109,9 @@ def _compare_url(owner: str, repo: str, base_ref: str, head_ref: str) -> str:
     return f"https://api.github.com/repos/{owner}/{repo}/compare/{encoded}"
 
 
-def fetch_compare_diff_text_sync(owner: str, repo: str, base_ref: str, head_ref: str, token: str) -> str:
+def fetch_compare_diff_text_sync(
+    owner: str, repo: str, base_ref: str, head_ref: str, token: str
+) -> str:
     """Sync variant for Celery workers."""
     url = _compare_url(owner, repo, base_ref, head_ref)
     with httpx.Client(timeout=120.0) as client:
@@ -122,7 +124,9 @@ def fetch_compare_diff_text_sync(owner: str, repo: str, base_ref: str, head_ref:
     return compare_payload_to_diff_text(payload)
 
 
-async def fetch_compare_diff_text(owner: str, repo: str, base_ref: str, head_ref: str, token: str) -> str:
+async def fetch_compare_diff_text(
+    owner: str, repo: str, base_ref: str, head_ref: str, token: str
+) -> str:
     """Async variant for FastAPI routes."""
     url = _compare_url(owner, repo, base_ref, head_ref)
     async with httpx.AsyncClient(timeout=120.0) as client:

@@ -83,7 +83,9 @@ def get_github_access_token(user: User = Depends(get_current_user)) -> str:
     try:
         return decrypt_secret(user.encrypted_github_token)
     except ValueError as e:
-        raise HTTPException(status_code=500, detail="Stored GitHub token could not be decrypted.") from e
+        raise HTTPException(
+            status_code=500, detail="Stored GitHub token could not be decrypted."
+        ) from e
 
 
 def parse_uuid(task_id: str) -> UUID:

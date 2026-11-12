@@ -3,70 +3,93 @@
 import { useState } from "react";
 import { useRepos } from "@/hooks/use-repos";
 import { RepoCard } from "./RepoCard";
-import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { Input } from "@/components/ui/input";
-import { Search, AlertCircle } from "lucide-react";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function RepoList() {
   const [query, setQuery] = useState("");
-  const { data: repos, isLoading, isError } = useRepos();
+  const { data: repos, isLoading, isError, refetch, isFetching } = useRepos();
 
   const filtered = repos?.filter(
     (r) =>
       r.name.toLowerCase().includes(query.toLowerCase()) ||
-      r.description?.toLowerCase().includes(query.toLowerCase())
+      r.full_name.toLowerCase().includes(query.toLowerCase()) ||
+      r.description?.toLowerCase().includes(query.toLowerCase()),
   );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner size="lg" label="Fetching your repositories..." />
+      <div role="status" className="border-t border-border py-10">
+        <p className="kicker">Loading</p>
+        <p className="mt-3 font-heading text-3xl tracking-tight text-foreground">
+          Fetching repositories
+        </p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="rounded-full bg-destructive/10 p-3">
-          <AlertCircle className="h-6 w-6 text-destructive" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-foreground mb-1">
-            Unable to load repositories
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Please check your connection and try again.
-          </p>
-        </div>
+      <div role="alert" className="border-t border-border py-10">
+        <p className="kicker text-destructive!">Could not load</p>
+        <h2 className="mt-3 font-heading text-3xl tracking-tight text-foreground">
+          Repositories did not load
+        </h2>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+          The request to GitHub failed. Check the connection, then try again.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-6 h-11 px-4"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? "Trying again…" : "Try again"}
+        </Button>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search repositories by name or description..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-11 h-11 text-base border-white/10 bg-white/5 focus:bg-white/8"
-        />
-      </div>
+  const total = repos?.length ?? 0;
+  const shown = filtered?.length ?? 0;
 
-      {filtered?.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="text-base text-muted-foreground">
-            {query ? `No repositories found matching "${query}"` : "No repositories available"}
-          </p>
-        </div>
+  return (
+    <div>
+      <label className="block">
+        <span className="sr-only">Search repositories</span>
+        <span className="relative block">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-0 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            placeholder="Search by name or description"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-11 rounded-none border-0 border-b border-border bg-transparent pr-0 pl-7 shadow-none focus-visible:border-foreground focus-visible:ring-0"
+          />
+        </span>
+      </label>
+
+      <p className="mt-4 font-mono text-xs text-muted-foreground">
+        {query ? `${shown} of ${total}` : `${total} ${total === 1 ? "repository" : "repositories"}`}
+      </p>
+
+      {shown === 0 ? (
+        <p className="border-t border-border py-10 text-sm text-muted-foreground">
+          {query
+            ? `Nothing matches “${query}”.`
+            : "This account has no repositories the review can read."}
+        </p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-2 border-t border-border">
           {filtered?.map((repo) => (
-            <RepoCard key={repo.id} repo={repo} />
+            <li key={repo.id}>
+              <RepoCard repo={repo} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
